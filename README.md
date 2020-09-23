@@ -322,3 +322,22 @@ CLAMD_CONF_MaxFileSize=2000M
 CLAMD_CONF_StreamMaxLength=2000M
 CLAMD_CONF_MaxScanSize=2000M
 ```
+
+# Contributing
+## Bug Reports & Feature Requests
+
+Please use the issue tracker to report any bugs or file feature requests.
+
+## Developing
+
+If you are interested in being a contributor and want to get involved in developing this project shoot us an email at ops@totango.com
+
+In general, PRs are welcome. We follow the typical "fork-and-pull" Git workflow.
+
+1. **Fork** the repo on GitHub
+2. **Clone** the project to your own machine
+3. **Commit** changes to your own branch
+4. **Push** your work back up to your fork
+5. Submit a **Pull Request** so that we can review your changes
+
+NOTE: Be sure to merge the latest changes from "upstream" before making a pull request!

@@ -5,7 +5,7 @@ general:
                         # other workers can check for the stale task and set it back to pending.
                         # The stale timer should be longer than the scan timeout. 
     pollingInterval: 5
-    maxScanAttempts: 5 # this only applies to if a file *failed* to be scanned, NOT if the file is infected!
+    # maxScanAttempts: 5 # this only applies to if a file *failed* to be scanned, NOT if the file is infected!
                        # set to -1 if you want mousetrap to retry forever
 
 clamd:

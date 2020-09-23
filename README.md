@@ -16,7 +16,7 @@ general:
     scanTimeout: 3600
     markStaleAfter: 4000
     pollingInterval: 5
-    maxScanAttempts: -1
+    # maxScanAttempts: -1 # not yet implemented
 clamd:
     host: localhost
     port: 3310
@@ -70,7 +70,7 @@ general:
     scanTimeout: 3600
     markStaleAfter: 4000
     pollingInterval: 5
-    maxScanAttempts: 5
+    # maxScanAttempts: 5 # not yet implemented
 clamd:
     host: localhost
     port: 3310

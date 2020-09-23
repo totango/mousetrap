@@ -62,7 +62,7 @@ let currentTask = undefined;
 const pollingInterval = config.get('general.pollingInterval') * 1000;
 const markStaleAfter = config.get('general.markStaleAfter') * 1000;
 const scanTimeout = config.get('general.scanTimeout') * 1000;
-const maxScanAttempts = config.get('general.maxScanAttempts');
+const maxScanAttempts = config.get('general.maxScanAttempts'); // TODO implement max scans
 
 
 let stopCheck = false;
@@ -76,9 +76,6 @@ const initialize = async () => {
     _logger.info({ step: "creating_storage_agent", success: true });
 
     db.initialize();
-    // db.getDb().pollPendingPeriodically();
-    // if (maxScanAttempts !== -1)
-    //     db.getDb().pollStalePeriodically();
     _logger.info({ step: "creating_db_agent", success: true });
 
     queue.initialize();

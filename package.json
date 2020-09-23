@@ -1,0 +1,47 @@
+{
+    "name": "mousetrap",
+    "version": "1.0.0",
+    "description": "S3 antivirus scanner",
+    "main": "www.js",
+    "scripts": {
+        "dev": "NODE_ENV=development LOG_LEVEL=trace nodemon ./bin/www",
+        "prod": "node ./bin/www.js",
+        "test": "jest --detectOpenHandles --bail"
+    },
+    "author": "amitl@totango.com",
+    "license": "ISC",
+    "devDependencies": {
+        "aws-sdk-mock": "^5.1.0",
+        "import-fresh": "^3.2.1",
+        "jest": "^25.2.4",
+        "nodemon": "^2.0.2"
+    },
+    "dependencies": {
+        "await-timeout": "^1.1.1",
+        "aws-sdk": "^2.641.0",
+        "benchmark": "^2.1.4",
+        "body-parser": "^1.19.0",
+        "clamscan": "^1.2.0",
+        "config": "^3.3.0",
+        "csv-generate": "^3.2.4",
+        "express": "^4.17.1",
+        "express-list-endpoints": "^4.0.1",
+        "express-request-id": "^1.4.1",
+        "js-yaml": "^3.13.1",
+        "jsend": "^1.1.0",
+        "lodash": "^4.17.15",
+        "lodash.get": "^4.4.2",
+        "morgan": "^1.9.1",
+        "pino": "^5.17.0",
+        "pino-pretty": "^3.6.1",
+        "prom-client": "^12.0.0",
+        "request": "^2.88.2",
+        "request-promise-native": "^1.0.8",
+        "s3-readable-stream": "0.0.8",
+        "s3-streams": "^0.4.0",
+        "sqs-consumer": "^5.4.0",
+        "streamspeed": "^1.1.1",
+        "uuid": "^7.0.2",
+        "yargs": "^15.3.1"
+    }
+}

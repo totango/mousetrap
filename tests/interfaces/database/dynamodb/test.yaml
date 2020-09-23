@@ -1,0 +1,4 @@
+dynamodb:
+    enabled: true
+    tableName: testingTable
+    region: us-east-1

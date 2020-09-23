@@ -1,0 +1,6 @@
+sqs:
+    enabled: true
+    url: "https://sqs.us-east-1.amazonaws.com/1234567/testing-queue"
+    pollingInterval: 20
+    visibilityTimeout: 30
+    region: us-east-1

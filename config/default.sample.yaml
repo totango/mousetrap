@@ -1,0 +1,29 @@
+general:
+    port: 3000
+    scanTimeout: 3600 # in seconds
+    markStaleAfter: 4000 # in case a worker dies without setting it's current task back to pending
+                        # other workers can check for the stale task and set it back to pending.
+                        # The stale timer should be longer than the scan timeout. 
+    pollingInterval: 5
+    maxScanAttempts: 5 # this only applies to if a file *failed* to be scanned, NOT if the file is infected!
+                       # set to -1 if you want mousetrap to retry forever
+
+clamd:
+    host: localhost
+    port: 3310
+
+storage: s3 # supports only s3 currently
+
+dynamodb:
+    tableName: mousetrap-scan-tasks
+    region: us-east-1
+
+sqs:
+    url: "https://sqs.us-east-1.amazonaws.com/123456789/mousetrap-scan-tasks-temp"
+    pollingInterval: 20
+    visibilityTimeout: 30
+    region: us-east-1
+
+sns:
+    topicArn: "arn:aws:sns:us-east-1:123456789:mousetrap-notifications-temp"
+    region: us-east-1

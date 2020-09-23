@@ -1,0 +1,182 @@
+// const AWSMock = require('aws-sdk-mock');
+// const importFresh = require("import-fresh");
+
+// describe('sqs interface', () => {
+//     beforeAll((done) => {
+//         process.env.NODE_CONFIG_DIR = __dirname;
+
+//         done();
+//     });
+
+//     it("should be an instance of the 'Sqs' class", () => {
+//         expect.assertions(1);
+//         const queue = importFresh('../../../../interfaces/queue/queue');
+//         const Sqs = importFresh('../../../../interfaces/queue/sqs.js');
+
+//         queue.initialize();
+//         const instOf = queue.getQueue() instanceof Sqs;
+
+//         expect(instOf).toStrictEqual(true);
+//     });
+
+//     it("should handle a polling status", async () => {
+//         AWSMock.mock('SQS', 'receiveMessage', (params, callback) => {
+//             callback(null, { Messages: [] })
+//         });
+//         expect.assertions(2);
+
+//         const queue = importFresh('../../../../interfaces/queue/queue');
+//         queue.initialize();
+//         queue.getQueue().listen();
+
+//         expect(queue.getQueue().isListening).toBeTruthy();
+//         queue.getQueue().pause();
+//         expect(queue.getQueue().isPaused).toBeFalsy();
+//         AWSMock.restore('SQS');
+//     })
+
+//     it("should test if event is emitted when a message is received", async (done) => {
+//         const sampleMessage = {
+//             Body: JSON.stringify({ filePath: "bucket/sampleMessage.csv" }),
+//         }
+//         AWSMock.mock('SQS', 'receiveMessage', (params, callback) => {
+//             callback(null, {
+//                 Messages: [sampleMessage]
+//             });
+//         })
+//         expect.assertions(2);
+
+//         const eventEmitter = importFresh('../../../../interfaces/eventEmitter');
+//         const queue = importFresh('../../../../interfaces/queue/queue');
+//         queue.initialize();
+
+//         eventEmitter.on('queue-message', (message) => {
+//             expect(message.filePath).toEqual("bucket/sampleMessage.csv");
+//             expect(message._rawMessage).toEqual(sampleMessage);
+//             done();
+//         });
+
+//         await queue.getQueue().checkMessages();
+
+//         AWSMock.restore('SQS');
+//     });
+
+
+//     it("should test if message is not proper json and delete it", async (done) => {
+//         const sampleMessage = {
+//             Body: '{invalid: json}',
+//         }
+//         AWSMock.mock('SQS', 'receiveMessage', (params, callback) => {
+//             callback(null, {
+//                 Messages: [sampleMessage]
+//             });
+//         })
+//         expect.assertions(2);
+
+//         const queue = importFresh('../../../../interfaces/queue/queue');
+//         queue.initialize();
+
+//         const isJson = (str) => {
+//             try {
+//                 JSON.parse(str);
+//                 return true;
+//             } catch (error) {
+//                 return false;
+//             }
+//         }
+
+//         const deleteMessage = jest.spyOn(queue.getQueue(), "deleteMessage");
+
+//         deleteMessage.mockImplementation((message) => {
+//             expect(isJson(message.Body)).toBeFalsy();
+//             expect(message).toEqual(sampleMessage);
+//             done();
+//         })
+
+//         await queue.getQueue().checkMessages();
+
+//         deleteMessage.mockRestore()
+//         AWSMock.restore('SQS');
+//     });
+
+
+//     it("should test if message does not have 'filePath' key and delete it", async (done) => {
+//         const sampleMessage = {
+//             Body: '{"notFilePath": 1}',
+//         }
+//         AWSMock.mock('SQS', 'receiveMessage', (params, callback) => {
+//             callback(null, {
+//                 Messages: [sampleMessage]
+//             });
+//         })
+//         expect.assertions(2);
+
+//         const queue = importFresh('../../../../interfaces/queue/queue');
+//         queue.initialize();
+
+//         const deleteMessage = jest.spyOn(queue.getQueue(), "deleteMessage");
+
+//         deleteMessage.mockImplementation((message) => {
+//             expect(JSON.parse(message.Body).hasOwnProperty("filePath")).toBeFalsy();
+//             expect(message).toEqual(sampleMessage);
+//             done();
+//         })
+//         await queue.getQueue().checkMessages();
+
+//         AWSMock.restore('SQS');
+//     });
+
+//     // it("should sum the size the pending tasks", async () => {
+//     //     const sampleTask = {
+//     //         filePath: "bucket/sumSize.csv",
+//     //         scanState: "PENDING",
+//     //         createdTs: 1585575781434,
+//     //         scanStartTs: -1,
+//     //         scanEndTs: -1,
+//     //         scanResult: 'PENDING',
+//     //         viruses: [],
+//     //         scanAttempts: 0,
+//     //         sizeMb: 100,
+//     //         fileHash: "1234567890"
+//     //     }
+//     //     AWSMock.mock('DynamoDB.DocumentClient', 'scan', (params, callback) => {
+//     //         callback(null, {
+//     //             Items: [sampleTask, sampleTask, sampleTask]
+//     //         });
+//     //     });
+//     //     expect.assertions(1);
+
+//     //     const db = importFresh('../../../../interfaces/database/db.js');
+//     //     db.initialize()
+
+//     //     const sum = await db.getDb().getSizeOfPendingTasks();
+//     //     expect(sum).toEqual(300);
+//     //     AWSMock.restore('DynamoDB.DocumentClient');
+//     // });
+
+//     // it("should get a task by file path", async () => {
+//     //     const sampleTask = {
+//     //         filePath: "bucket/getFile.csv",
+//     //         scanState: "PENDING",
+//     //         createdTs: 1585575781434,
+//     //         scanStartTs: -1,
+//     //         scanEndTs: -1,
+//     //         scanResult: 'PENDING',
+//     //         viruses: [],
+//     //         scanAttempts: 0,
+//     //         sizeMb: 100,
+//     //         fileHash: "1234567890"
+//     //     }
+//     //     AWSMock.mock('DynamoDB.DocumentClient', 'get', (params, callback) => {
+//     //         callback(null, { Item: sampleTask });
+//     //     });
+//     //     expect.assertions(1);
+
+//     //     const db = importFresh('../../../../interfaces/database/db.js');
+//     //     db.initialize()
+
+//     //     const task = await db.getDb().getTaskByFile("bucket/getFile.csv");
+//     //     expect(task).toEqual({ Item: sampleTask });
+//     //     AWSMock.restore('DynamoDB.DocumentClient');
+//     // });
+// });

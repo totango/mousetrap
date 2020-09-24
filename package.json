@@ -29,7 +29,7 @@
         "express-request-id": "^1.4.1",
         "js-yaml": "^3.13.1",
         "jsend": "^1.1.0",
-        "lodash": "^4.17.15",
+        "lodash": "^4.17.19",
         "lodash.get": "^4.4.2",
         "morgan": "^1.9.1",
         "pino": "^5.17.0",

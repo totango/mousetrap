@@ -17,6 +17,8 @@ storage: s3 # supports only s3 currently
 dynamodb:
     tableName: mousetrap-scan-tasks
     region: us-east-1
+    scanStateIndex: scanState-filePath-index # having an index with the primary key scanState and sort key filePath
+                                             # is **highly** recommended to keep costs down
 
 sqs:
     url: "https://sqs.us-east-1.amazonaws.com/123456789/mousetrap-scan-tasks-temp"

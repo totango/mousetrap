@@ -1,57 +1,74 @@
-const DbInterface = require('./interface');
-const AWS = require('aws-sdk');
-const helpers = require('../../helpers');
+const DbInterface = require("./interface");
+const AWS = require("aws-sdk");
+const helpers = require("../../helpers");
 const logger = helpers.getLogger("dynamodb");
 
 class Dynamodb extends DbInterface {
-    constructor(tableName, region) {
+    constructor(tableName, region, scanStateIndex) {
         super();
         this.dynamo = new AWS.DynamoDB.DocumentClient({ region });
         this.tableName = tableName;
+        this.scanStateIndex = scanStateIndex;
     }
 
     onError(error) {
-        logger.error({ msg: "Encountered an error while communicating with DynamoDB", error: { message: error.message, code: error.code, stack: error.stack }, success: false });
+        logger.error({
+            msg: "Encountered an error while communicating with DynamoDB",
+            error: { message: error.message, code: error.code, stack: error.stack },
+            success: false,
+        });
     }
 
     async getTaskByFile(file) {
-        const task = await this.dynamo.get({
-            TableName: this.tableName,
-            Key: {
-                filePath: file
-            }
-        }).promise();
+        const task = await this.dynamo
+            .get({
+                TableName: this.tableName,
+                Key: {
+                    filePath: file,
+                },
+            })
+            .promise();
 
-        if (task)
-            return task.Item;
+        if (task) return task.Item;
 
-        return undefined
+        return undefined;
     }
 
     async getTasks(...statuses) {
         let allTasks = [];
 
         for (const status of statuses) {
-            const params = {
-                TableName: this.tableName,
-                Key: { scanState: status },
-                FilterExpression: "scanState = :scanState",
-                ExpressionAttributeValues: {
-                    ":scanState": status
-                }
-            };
+            let params;
+            if (this.scanStateIndex)
+                params = {
+                    TableName: this.tableName,
+                    IndexName: this.scanStateIndex,
+                    KeyConditionExpression: "scanState = :scanState",
+                    ExpressionAttributeValues: { ":scanState": status },
+                };
+            else
+                params = {
+                    TableName: this.tableName,
+                    Key: { scanState: status },
+                    FilterExpression: "scanState = :scanState",
+                    ExpressionAttributeValues: {
+                        ":scanState": status,
+                    },
+                };
 
             let tasks = [];
             let items;
-            do { // paginate if there are more results than can be retrieved in one request
-                items = await this.dynamo.scan(params).promise();
-                items.Items.forEach(item => tasks.push(item)); // dynamo returns all items inside an 'Items' object key, so we extract them all
+            do {
+                // paginate if there are more results than can be retrieved in one request
+                if (this.scanStateIndex) items = await this.dynamo.query(params).promise();
+                else items = await this.dynamo.scan(params).promise();
+                items.Items.forEach((item) => tasks.push(item)); // dynamo returns all items inside an 'Items' object key, so we extract them all
                 params.ExclusiveStartKey = items.LastEvaluatedKey;
             } while (typeof items.LastEvaluatedKey != "undefined");
             allTasks = allTasks.concat(tasks);
         }
 
-        allTasks.sort((a, b) => a.createdTs - b.createdTs)
+        allTasks.sort((a, b) => a.createdTs - b.createdTs);
         return allTasks;
     }
 
@@ -64,31 +81,31 @@ class Dynamodb extends DbInterface {
                 createdTs: Date.now(),
                 scanStartTs: -1,
                 scanEndTs: -1,
-                scanResult: 'PENDING',
+                scanResult: "PENDING",
                 viruses: [],
                 scanAttempts: 0,
                 sizeMb: sizeMb,
                 fileHash: ETag.slice(1, -1), // removes double quote from beginning and end
-                notifyChannels: notifyChannels
+                notifyChannels: notifyChannels,
             },
-            ReturnValues: "ALL_OLD"
+            ReturnValues: "ALL_OLD",
         };
 
-        return await this.dynamo.put(params).promise()
+        return await this.dynamo.put(params).promise();
     }
 
     async setPending(file, incrementScanAttempts) {
         const params = {
             TableName: this.tableName,
             Key: {
-                "filePath": file
+                filePath: file,
             },
             UpdateExpression: "SET scanState=:scanState, scanAttempts=scanAttempts + :incrementBy",
             ExpressionAttributeValues: {
                 ":incrementBy": incrementScanAttempts ? 1 : 0,
-                ":scanState": "PENDING"
+                ":scanState": "PENDING",
             },
-            ReturnValues: "ALL_NEW"
+            ReturnValues: "ALL_NEW",
         };
 
         const response = await this.dynamo.update(params).promise();
@@ -100,16 +117,16 @@ class Dynamodb extends DbInterface {
             const params = {
                 TableName: this.tableName,
                 Key: {
-                    "filePath": file
+                    filePath: file,
                 },
                 UpdateExpression: "SET scanState=:scanState, scanStartTs=:scanStartTs",
                 ConditionExpression: "scanState=:pending", // only update if state is `PENDING`
                 ExpressionAttributeValues: {
                     ":scanState": "SCANNING",
                     ":scanStartTs": Date.now(),
-                    ":pending": "PENDING"
+                    ":pending": "PENDING",
                 },
-                ReturnValues: "ALL_NEW"
+                ReturnValues: "ALL_NEW",
             };
 
             const response = await this.dynamo.update(params).promise();
@@ -119,7 +136,7 @@ class Dynamodb extends DbInterface {
             // some other worker is already scanning the current task, and we should try a different one
             if (error.code === "ConditionalCheckFailedException") {
                 const raceError = new Error("Attempted to scan an item that is being scanned");
-                raceError.code = "ItemAlreadyBeingScanned"
+                raceError.code = "ItemAlreadyBeingScanned";
 
                 throw raceError;
             }
@@ -132,17 +149,18 @@ class Dynamodb extends DbInterface {
         const params = {
             TableName: this.tableName,
             Key: {
-                "filePath": file
+                filePath: file,
             },
-            UpdateExpression: "SET scanState=:scanState, scanAttempts=scanAttempts + :incrementBy, scanResult=:result, viruses=:viruses, scanEndTs=:scanEndTs",
+            UpdateExpression:
+                "SET scanState=:scanState, scanAttempts=scanAttempts + :incrementBy, scanResult=:result, viruses=:viruses, scanEndTs=:scanEndTs",
             ExpressionAttributeValues: {
                 ":scanState": "FINISHED",
                 ":incrementBy": 1,
                 ":scanEndTs": ts,
                 ":result": result,
-                ":viruses": viruses ? viruses : []
+                ":viruses": viruses ? viruses : [],
             },
-            ReturnValues: "ALL_NEW"
+            ReturnValues: "ALL_NEW",
         };
 
         const response = await this.dynamo.update(params).promise();
@@ -153,14 +171,14 @@ class Dynamodb extends DbInterface {
         const params = {
             TableName: this.tableName,
             Key: {
-                "filePath": file
+                filePath: file,
             },
             UpdateExpression: "SET scanState=:scanState, scanAttempts=scanAttempts + :incrementBy",
             ExpressionAttributeValues: {
                 ":scanState": "FAILED",
-                ":incrementBy": incrementScanAttempts ? 1 : 0
+                ":incrementBy": incrementScanAttempts ? 1 : 0,
             },
-            ReturnValues: "ALL_NEW"
+            ReturnValues: "ALL_NEW",
         };
 
         const response = await this.dynamo.update(params).promise();

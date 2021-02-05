@@ -66,12 +66,8 @@ const initialize = async () => {
     const _logger = logger.child({ event: "initialization" });
 
     // 1. create a client that communicates with clamd via socket
-    _logger.info({step: "pre_creating_client",
-        host: config.get('clamd.host'),
-        port: config.get('clamd.port'),
-        debug_mode: true})
     _clamscan = await new NodeClam().init({
-        debug_mode:  true,
+        debug_mode:  process.env.LOG_LEVEL === 'debug' ? true : false,
         clamdscan: {
             host: config.get('clamd.host'),
             port: config.get('clamd.port')

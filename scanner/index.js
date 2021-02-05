@@ -67,7 +67,7 @@ const initialize = async () => {
 
     // 1. create a client that communicates with clamd via socket
     _clamscan = await new NodeClam().init({
-        debug_mode: helpers.isDevelopment() || helpers.getLogLevel === "DEBUG" ? true : false,
+        debug_mode:  process.env.LOG_LEVEL === 'debug' ? true : false,
         clamdscan: {
             host: config.get('clamd.host'),
             port: config.get('clamd.port')

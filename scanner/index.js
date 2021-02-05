@@ -69,9 +69,9 @@ const initialize = async () => {
     _logger.info({step: "pre_creating_client",
         host: config.get('clamd.host'),
         port: config.get('clamd.port'),
-        debug_mode: helpers.isDevelopment() || helpers.getLogLevel === "DEBUG" ? true : false})
+        debug_mode: true})
     _clamscan = await new NodeClam().init({
-        debug_mode: helpers.isDevelopment() || helpers.getLogLevel === "DEBUG" ? true : false,
+        debug_mode:  true,
         clamdscan: {
             host: config.get('clamd.host'),
             port: config.get('clamd.port')

@@ -189,9 +189,17 @@ const isClamdHealthy = async () => {
         _logger.debug({ step: "scan_test_stream" })
         const { is_infected } = await _clamscan.scan_stream(virusStream);
         _logger.debug({ step: "scan_test_stream", is_infected, success: true })
-
-        if (!is_infected)
+        
+        let eicarInfectedValidation;
+        if (config.has('health.eicarInfectedValidation')) {
+            eicarInfectedValidation = config.get('health.eicarInfectedValidation');
+        } else {
+            eicarInfectedValidation = true;
+        } 
+                
+        if (!is_infected && eicarInfectedValidation) {
             return false;
+        }
 
         return true;
     } catch (error) {

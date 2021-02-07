@@ -12,6 +12,9 @@ clamd:
     host: localhost
     port: 3310
 
+health:
+    eicarInfectedValidation: true # enforce the EICAR string to recognize as infected by the AV engine, defaults to true
+    
 storage: s3 # supports only s3 currently
 
 dynamodb:

@@ -1,4 +1,5 @@
 const helpers = require('./helpers');
+const config = require('config'); // the name can be misleading - this is an npm package
 const scanner = require('./scanner');
 const tasksController = require('./controllers/tasks');
 const logger = helpers.getLogger("server"); // generate logger for 'server' module
@@ -7,7 +8,6 @@ const jsend = require('jsend');
 const addReqId = require('express-request-id')();
 const _ = require('lodash');
 const Prometheus = require('prom-client')
-
 const express = require('express');
 const listEndpoints = require('express-list-endpoints');
 const app = express();
@@ -27,11 +27,24 @@ const start = async () => {
         AWS.config.logger = console;
 
     // create a connection with a running clamav daemon
-    try {
-        await scanner.initialize();
-        _logger.info({ step: "init_clamd", success: true })
-    } catch (error) {
-        _logger.error({ step: "init_clamd", success: false, error: { message: error.message, code: error.code, stack: error.stack }, msg: "Could not initialize connection to ClamAV, aborting startup." })
+    // clamd healthcheck loop is in this scope
+    // initialization is attempted and is the indication if the clamd is up and running
+    let retry_counter = 0;
+    while (retry_counter < config.get('clamd.maxInitAttemps')) {
+        try {
+            await scanner.initialize();
+            retry_counter += config.get('clamd.maxInitAttemps');
+            _logger.info({ step: "init_clamd", success: true });
+        } catch (error) {
+            _logger.info({ step: "init_clamd", success: false, msg: "Could not initialize connection to ClamAV. Attemp {0} out of {1}".format(retry_counter + 1, config.get('clamd.maxInitAttemps')) });
+            retry_counter++;
+            await helpers.delay(config.get('clamd.initWaitInterval'));
+            continue;
+        }
+    }
+
+    if (retry_counter >= config.get('clamd.maxInitAttemps')) {
+        _logger.error({ step: "init_clamd", success: false, error: { message: error.message, code: error.code, stack: error.stack }, msg: "Max initialization retries count reached, aborting startup." })
         process.exit(1);
     }
 

@@ -2,7 +2,7 @@ const helpers = require("../../helpers");
 const logger = helpers.getLogger("tasks-controller"); // generate logger for 'tasks-controller' module
 const AWS = require("aws-sdk");
 const eventEmitter = require("../../interfaces/eventEmitter");
-const config = require("config");
+const config = require('config');
 const Prometheus = require("prom-client");
 const Timeout = require("await-timeout");
 

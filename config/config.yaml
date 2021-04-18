@@ -11,6 +11,8 @@ general:
 clamd:
     host: localhost
     port: 3310
+    maxInitAttemps: 5 # max number of clamd initializations before exiting with error
+    initWaitInterval: 5000 # how long the wait between initialization attempts is (this is in milliseconds)
 
 health:
     eicarInfectedValidation: true # enforce the EICAR string to recognize as infected by the AV engine, defaults to true
@@ -18,7 +20,7 @@ health:
 storage: s3 # supports only s3 currently
 
 dynamodb:
-    tableName: mousetrap-scan-tasks
+    tableName: mousetrap
     region: us-east-1
     scanStateIndex: scanState-filePath-index # having an index with the primary key scanState and sort key filePath
                                              # is **highly** recommended to keep costs down

@@ -33,17 +33,17 @@ const start = async () => {
     while (retry_counter < config.get('clamd.maxInitAttemps')) {
         try {
             await scanner.initialize();
-            retry_counter += config.get('clamd.maxInitAttemps');
+            retry_counter += (config.get('clamd.maxInitAttemps') + 1);
             _logger.info({ step: "init_clamd", success: true });
         } catch (error) {
-            _logger.info({ step: "init_clamd", success: false, msg: "Could not initialize connection to ClamAV. Attemp {0} out of {1}".format(retry_counter + 1, config.get('clamd.maxInitAttemps')) });
+            _logger.info({ step: "init_clamd", success: false, msg: "Could not initialize connection to ClamAV. Attempt " + (retry_counter + 1) + " out of " + config.get('clamd.maxInitAttemps')});
             retry_counter++;
             await helpers.delay(config.get('clamd.initWaitInterval'));
             continue;
         }
     }
 
-    if (retry_counter >= config.get('clamd.maxInitAttemps')) {
+    if (retry_counter === config.get('clamd.maxInitAttemps')) {
         _logger.error({ step: "init_clamd", success: false, error: { message: error.message, code: error.code, stack: error.stack }, msg: "Max initialization retries count reached, aborting startup." })
         process.exit(1);
     }

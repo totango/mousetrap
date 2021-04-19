@@ -79,11 +79,11 @@ const initialize = async () => {
     // we check availability by running the healthcheck (EICAR test string)
     let isHealthy = false;
 
-    _logger.debug({ step: "attempting_connection", attempt: i + 1 });
+    _logger.debug({ step: "attempting_connection"});
     isHealthy = await isClamdHealthy();
 
     if (isHealthy) {
-        _logger.debug({ step: "attempting_connection", attempt: i + 1, success: true });
+        _logger.debug({ step: "attempting_connection", success: true });
     }
 
 

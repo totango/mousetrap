@@ -78,21 +78,14 @@ const initialize = async () => {
     // 2. wait for clamd to become available
     // we check availability by running the healthcheck (EICAR test string) until it returns healthy status
     let isHealthy = false;
-    for (let i = 0; i < 5; i++) { // TODO make max attempts configurable
-        _logger.debug({ step: "attempting_connection", attempt: i + 1 });
-        isHealthy = await isClamdHealthy();
+    _logger.debug({ step: "attempting_connection"});
+    isHealthy = await isClamdHealthy();
 
-        if (isHealthy) {
-            _logger.debug({ step: "attempting_connection", attempt: i + 1, success: true });
-            break;
-        }
-
-        await helpers.delay(5000)
+    if (isHealthy) {
+        _logger.debug({ step: "attempting_connection", success: true });
     }
-
-    // 3. if max attempts reached and clamd still isn't responding - throw
-    if (!isHealthy) {
-        _logger.error({ step: "attempting_connection", success: false, msg: "Reached max retry attempts" });
+    else {
+        _logger.error({ step: "attempting_connection", success: false });
         throw new Error("ClamAV is not responding");
     }
 

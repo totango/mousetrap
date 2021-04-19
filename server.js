@@ -7,7 +7,7 @@ const jsend = require('jsend');
 const addReqId = require('express-request-id')();
 const _ = require('lodash');
 const Prometheus = require('prom-client')
-
+const config = require('config'); // the name can be misleading - this is an npm package
 const express = require('express');
 const listEndpoints = require('express-list-endpoints');
 const app = express();
@@ -27,12 +27,28 @@ const start = async () => {
         AWS.config.logger = console;
 
     // create a connection with a running clamav daemon
-    try {
-        await scanner.initialize();
-        _logger.info({ step: "init_clamd", success: true })
-    } catch (error) {
-        _logger.error({ step: "init_clamd", success: false, error: { message: error.message, code: error.code, stack: error.stack }, msg: "Could not initialize connection to ClamAV, aborting startup." })
-        process.exit(1);
+    //
+    // configuring max init attempts and wait interval between attempts to be backward-compatible
+    // works even without altering the config yaml
+    let maxInitAttemps;
+    let initWaitInterval;
+    config.has("clamd.maxInitAttemps") ? maxInitAttemps = config.get("clamd.maxInitAttemps") : maxInitAttemps = 5;
+    config.has("clamd.initWaitInterval") ? initWaitInterval = config.get("clamd.initWaitInterval") : initWaitInterval = 5000;
+
+    for (let i = 0; i < maxInitAttemps; i++) {
+        try {
+            await scanner.initialize();
+            _logger.info({ step: "init_clamd", success: true })
+            break;
+        } catch (error) {
+            _logger.error({ step: "init_clamd", success: false, error: { message: error.message, code: error.code, stack: error.stack }, msg: `Could not initialize connection to ClamAV, Attempt ${i + 1} out of ${maxInitAttemps}` })
+        }
+
+        if (i === maxInitAttemps - 1) {
+            _logger.error({ step: "init_controllers", success: false, error: { message: error.message, code: error.code, stack: error.stack }, msg: "Could not initialize connection to ClamAV, aborting startup." })
+            process.exit(2);
+        }
+        await helpers.delay(initWaitInterval)
     }
 
     // initialize controller

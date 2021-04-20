@@ -89,7 +89,7 @@ const initialize = async () => {
         throw new Error("ClamAV is not responding");
     }
 
-    // 4. otherwise, return the client instance
+    // 3. otherwise, return the client instance
     return _clamscan;
 };
 

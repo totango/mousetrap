@@ -10,6 +10,9 @@
     },
     "author": "amitl@totango.com",
     "license": "ISC",
+    "engines": {
+        "node": "22.23.5"
+    },
     "devDependencies": {
         "aws-sdk-mock": "^5.1.0",
         "import-fresh": "^3.2.1",

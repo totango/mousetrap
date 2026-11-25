@@ -173,7 +173,9 @@ const isClamdHealthy = async () => {
     const _logger = logger.child({ event: "test_clamd" });
     try {
         const testStream = new Readable()
-        testStream.push('X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
+        // String.raw keeps the backslash: in a normal string literal '\P' becomes 'P',
+        // which sends a 67-byte string that ClamAV does not detect as EICAR
+        testStream.push(String.raw`X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*`)
         testStream.push(null);
 
         const virusStream = new PassThrough();
